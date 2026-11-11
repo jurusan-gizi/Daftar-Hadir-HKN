@@ -65,6 +65,13 @@
   .tbl td{padding:6px 0;border-bottom:1px dashed #e2e8f0}
   .tbl td:last-child{text-align:right;font-weight:600}
   .uji{background:#fef3c7;color:#92400e;font-size:12px;text-align:center;padding:6px;border-radius:8px;margin-bottom:12px;font-weight:600}
+  .tutup-k{text-align:center}
+  .tutup-k .ik{font-size:52px}
+  .tutup-k h2{color:var(--hijau);margin:6px 0}
+  .hitung{display:flex;justify-content:center;gap:8px;margin:16px 0 8px}
+  .hitung div{background:#f0fdfa;border:2px solid #99f6e4;border-radius:12px;padding:10px 4px;min-width:64px}
+  .hitung b{display:block;font-size:26px;color:var(--hijau)}
+  .hitung span{font-size:11px;color:var(--abu)}
   footer{text-align:center;font-size:12px;color:var(--abu);padding-bottom:24px}
   .hide{display:none!important}
 </style>
@@ -79,8 +86,20 @@
 <main>
   <div id="ujiBanner" class="uji hide">⚠️ MODE UJI COBA — jam & tanggal belum dibatasi</div>
 
+  <!-- 0. Belum dibuka -->
+  <section id="langkahTutup" class="kartu tutup-k hide">
+    <div class="ik">⏳</div>
+    <h2>Absen belum dibuka</h2>
+    <p class="meta" id="tBuka"></p>
+    <div class="hitung">
+      <div><b id="hH">0</b><span>hari</span></div><div><b id="hJ">00</b><span>jam</span></div>
+      <div><b id="hM">00</b><span>menit</span></div><div><b id="hD">00</b><span>detik</span></div>
+    </div>
+    <p class="meta">Halaman akan terbuka otomatis. Datang tepat waktu ya! 🚶‍♀️🚶</p>
+  </section>
+
   <!-- 1. Masukkan NIM -->
-  <section id="langkahNim" class="kartu">
+  <section id="langkahNim" class="kartu hide">
     <label for="nim">Masukkan NIM Anda</label>
     <input id="nim" inputmode="text" autocomplete="off" placeholder="PO71…" maxlength="20">
     <button class="btn" id="btnCek">Lanjut</button>
@@ -161,7 +180,7 @@ async function api(data){
   return r.json();
 }
 function pesan(el, teks, jenis){ $(el).innerHTML = teks ? `<div class="pesan ${jenis||'info'}">${teks}</div>` : ''; }
-function tampil(id){ ['langkahNim','langkahAbsen','langkahSukses'].forEach(x => $(x).classList.toggle('hide', x!==id)); }
+function tampil(id){ ['langkahTutup','langkahNim','langkahAbsen','langkahSukses'].forEach(x => $(x).classList.toggle('hide', x!==id)); }
 
 /* ---------- Cek NIM ---------- */
 async function cekNim(nimInput){
@@ -321,8 +340,41 @@ $('btnKirim').onclick = kirim;
 $('btnTutup').onclick = tutupKamera;
 $('btnKembali').onclick = () => cekNim(mhs.nim);
 
-const nimTersimpan = ambil('nimHKN');
-if (nimTersimpan){ $('nim').value = nimTersimpan; cekNim(nimTersimpan); }
+/* ---------- Cek jadwal buka ---------- */
+function waktuWita(tgl, jam){ // tgl 'YYYY-MM-DD', jam 'HH:mm'
+  return new Date(`${tgl}T${jam.padStart(5,'0')}:00+08:00`).getTime();
+}
+function serverMs(teks){ // 'dd/MM/yyyy HH:mm:ss' WITA
+  const m = teks.match(/(\d+)\/(\d+)\/(\d+) (\d+):(\d+):(\d+)/);
+  return m ? new Date(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:${m[6]}+08:00`).getTime() : Date.now();
+}
+function mulaiAplikasi(){
+  tampil('langkahNim');
+  const nimTersimpan = ambil('nimHKN');
+  if (nimTersimpan){ $('nim').value = nimTersimpan; cekNim(nimTersimpan); }
+}
+async function cekJadwal(){
+  let info;
+  try{ info = await api({ aksi:'info' }); }catch(e){ return mulaiAplikasi(); }
+  if (!info.ok || info.modeUji || !info.tanggal) return mulaiAplikasi();
+  const buka = waktuWita(info.tanggal, info.datang[0]);
+  const selisih = serverMs(info.waktu) - Date.now();   // koreksi jam HP
+  if (Date.now() + selisih >= buka) return mulaiAplikasi();
+  const hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const d = new Date(buka + 8*3600*1000);
+  $('tBuka').innerHTML = `Dibuka <b>${hari[d.getUTCDay()]}, ${d.getUTCDate()}/${d.getUTCMonth()+1}/${d.getUTCFullYear()} pukul ${info.datang[0]} WITA</b><br>📍 Depan Rujab Gubernur Sulsel`;
+  tampil('langkahTutup');
+  const t = setInterval(() => {
+    const sisa = buka - (Date.now() + selisih);
+    if (sisa <= 0){ clearInterval(t); return mulaiAplikasi(); }
+    const s = Math.floor(sisa/1000);
+    $('hH').textContent = Math.floor(s/86400);
+    $('hJ').textContent = String(Math.floor(s%86400/3600)).padStart(2,'0');
+    $('hM').textContent = String(Math.floor(s%3600/60)).padStart(2,'0');
+    $('hD').textContent = String(s%60).padStart(2,'0');
+  }, 1000);
+}
+cekJadwal();
 </script>
 </body>
 </html>
