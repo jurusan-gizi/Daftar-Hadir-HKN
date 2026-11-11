@@ -46,9 +46,10 @@
   .kam-atas b{font-size:16px}
   .tutup{background:rgba(255,255,255,.15);color:#fff;padding:8px 12px;font-size:14px}
   .layar{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-  video,#hasil{max-width:100%;max-height:100%;object-fit:contain}
+  video,#hasil{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
   video{transform:scaleX(-1)}
-  #hasil{display:none}
+  .petunjuk{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(15,118,110,.92);color:#fff;font-size:14px;padding:10px;border-radius:10px;text-align:center;font-weight:600}
+  .sfoto{width:140px;border-radius:12px;margin:10px auto 0;display:block;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   .gps{position:absolute;top:10px;left:10px;right:10px;background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:8px 10px;border-radius:10px;text-align:center}
   .gps.ok{background:rgba(22,101,52,.8)}
   .kam-bawah{padding:16px;display:flex;gap:10px;justify-content:center;background:#000}
@@ -114,6 +115,7 @@
     <div class="cek">✅</div>
     <h2 id="sJudul">Absen berhasil</h2>
     <div class="meta" id="sNama"></div>
+    <img id="sFoto" class="sfoto" alt="Foto absen">
     <table class="tbl">
       <tr><td>Waktu (WITA)</td><td id="sWaktu"></td></tr>
       <tr><td>Jarak dari titik acara</td><td id="sJarak"></td></tr>
@@ -131,7 +133,8 @@
   <div class="kam-atas"><b id="kJudul">Selfie DATANG</b><button class="tutup" id="btnTutup">✕ Batal</button></div>
   <div class="layar">
     <video id="video" autoplay playsinline muted></video>
-    <img id="hasil" alt="Hasil selfie">
+    <img id="hasil" alt="Hasil selfie" style="display:none">
+    <div class="petunjuk hide" id="petunjukFoto">✅ Foto sudah diambil. Periksa wajah Anda, lalu tekan <b>Kirim Absen</b>.</div>
     <div class="gps" id="gpsInfo"><span class="spin"></span>Mencari lokasi GPS…</div>
   </div>
   <div class="kam-bawah" id="barJepret"><button class="jepret" id="btnJepret" disabled aria-label="Ambil foto"></button></div>
@@ -197,7 +200,7 @@ function aturTombol(jenis, sudah, jendela){
 async function bukaKamera(jenis){
   jenisAktif = jenis; fotoData = null; posTerbaik = null; sumberFoto = 'kamera';
   $('kJudul').textContent = 'Selfie ' + jenis.toUpperCase();
-  $('hasil').style.display = 'none'; $('video').style.display = '';
+  $('hasil').style.display = 'none'; $('video').style.display = 'block'; $('petunjukFoto').classList.add('hide');
   $('barJepret').classList.remove('hide'); $('barKirim').classList.add('hide');
   $('btnJepret').disabled = true;
   $('kamera').classList.add('aktif');
@@ -258,7 +261,8 @@ function gambarKeKanvas(sumber, w0, h0, cermin){
   x.fillStyle = '#fff'; x.font = `600 ${fs}px sans-serif`;
   baris.forEach((t,i) => x.fillText(t, 10, H - tinggi + 22 + i*(fs+6)));
   fotoData = c.toDataURL('image/jpeg', 0.65);
-  $('hasil').src = fotoData; $('hasil').style.display = ''; $('video').style.display = 'none';
+  $('hasil').src = fotoData; $('hasil').style.display = 'block'; $('video').style.display = 'none';
+  $('petunjukFoto').classList.remove('hide');
   $('barJepret').classList.add('hide'); $('barKirim').classList.remove('hide');
 }
 function jepret(){
@@ -284,10 +288,12 @@ async function kirim(){
   try{
     const r = await api({ aksi:'absen', nim:mhs.nim, jenis:jenisAktif, lat:p.latitude, lng:p.longitude,
       acc:p.accuracy, foto:fotoData, sumber:sumberFoto, ua:navigator.userAgent });
+    const fotoTerkirim = fotoData;
     tutupKamera();
     if (!r.ok){ await cekNim(mhs.nim); pesan('pesanAbsen', r.pesan, 'err'); return; }
     $('sJudul').textContent = `Absen ${jenisAktif.toUpperCase()} berhasil`;
     $('sNama').textContent = `${r.nama} · ${mhs.nim}`;
+    $('sFoto').src = fotoTerkirim;
     $('sWaktu').textContent = r.waktu;
     $('sJarak').textContent = r.jarak + ' m';
     $('sStatus').innerHTML = r.statusLokasi === 'Valid' ? '✅ Valid' : '⚠️ Perlu dicek panitia';
@@ -307,9 +313,9 @@ $('btnDatang').onclick = () => bukaKamera('datang');
 $('btnPulang').onclick = () => bukaKamera('pulang');
 $('btnJepret').onclick = jepret;
 $('btnUlang').onclick = () => {
-  fotoData = null; $('hasil').style.display='none';
+  fotoData = null; $('hasil').style.display='none'; $('petunjukFoto').classList.add('hide');
   $('barJepret').classList.remove('hide'); $('barKirim').classList.add('hide');
-  if (stream) $('video').style.display = '';
+  if (stream) $('video').style.display = 'block';
 };
 $('btnKirim').onclick = kirim;
 $('btnTutup').onclick = tutupKamera;
