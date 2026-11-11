@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin Absen HKN 2026 — Jurusan Gizi</title>
+<style>
+  :root{--hijau:#0f766e;--abu:#64748b;--bg:#f8fafc}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#0f172a}
+  header{background:#0f766e;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  header h1{font-size:18px}
+  header small{opacity:.85}
+  main{max-width:1200px;margin:0 auto;padding:16px}
+  .kartu{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:14px}
+  input,select{font:inherit;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff}
+  button{font:inherit;font-weight:700;border:0;border-radius:9px;padding:9px 14px;cursor:pointer;background:#0f766e;color:#fff}
+  button.sek{background:#e2e8f0;color:#0f172a}
+  #login{max-width:360px;margin:60px auto}
+  #login input{width:100%;margin:10px 0}
+  #login button{width:100%}
+  .err{color:#b91c1c;font-size:14px;margin-top:8px}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+  .stat div{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-left:5px solid #94a3b8}
+  .stat b{display:block;font-size:28px}
+  .stat span{font-size:13px;color:var(--abu)}
+  .s1{border-color:#0f766e!important}.s2{border-color:#f59e0b!important}.s3{border-color:#dc2626!important}.s4{border-color:#7c3aed!important}
+  .alat{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .alat input{flex:1;min-width:180px}
+  .alat input[type=checkbox]{flex:none;min-width:0;margin-right:4px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 6px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;position:sticky;top:0;font-size:12px;text-transform:uppercase;color:#475569}
+  .wrap{overflow:auto;max-height:70vh}
+  .lbl{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+  .l-penuh{background:#dcfce7;color:#166534}.l-sebagian{background:#fef3c7;color:#92400e}.l-tidak{background:#fee2e2;color:#991b1b}
+  .l-cek{background:#ede9fe;color:#5b21b6}
+  .foto{width:54px;height:72px;object-fit:cover;border-radius:6px;background:#e2e8f0;display:block}
+  .sel{display:flex;gap:6px;align-items:flex-start}
+  .kecil{font-size:11px;color:var(--abu);line-height:1.4}
+  a{color:#0f766e}
+  .rekapProdi td:not(:first-child),.rekapProdi th:not(:first-child){text-align:center}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Admin Absen Jalan Santai HKN 2026</h1><small id="subjudul">Jurusan Gizi Poltekkes Kemenkes Makassar</small></div>
+  <div class="alat hide" id="aksiAtas">
+    <label class="kecil" style="color:#fff"><input type="checkbox" id="autoRef" checked> Auto-refresh 30 dtk</label>
+    <button class="sek" id="btnRefresh">↻ Refresh</button>
+    <button class="sek" id="btnUnduh">⬇ Unduh Excel (CSV)</button>
+  </div>
+</header>
+
+<section id="login" class="kartu">
+  <b>Masuk Admin</b>
+  <input type="password" id="pwd" placeholder="Password admin">
+  <button id="btnMasuk">Masuk</button>
+  <div class="err" id="errLogin"></div>
+</section>
+
+<main id="dash" class="hide">
+  <div class="stat">
+    <div><b id="sTotal">0</b><span>Wajib hadir (angkatan <span id="sAngk"></span>)</span></div>
+    <div class="s1"><b id="sPenuh">0</b><span>Hadir penuh (datang + pulang)</span></div>
+    <div class="s2"><b id="sSebagian">0</b><span>Hadir sebagian</span></div>
+    <div class="s3"><b id="sTidak">0</b><span>Belum / tidak hadir</span></div>
+    <div class="s4"><b id="sCek">0</b><span>Lokasi perlu dicek</span></div>
+  </div>
+
+  <div class="kartu">
+    <b>Rekap per Prodi &amp; Kelas</b> <span class="kecil">(angkatan wajib)</span>
+    <div class="wrap" style="max-height:none;margin-top:8px"><table class="rekapProdi" id="tblProdi"></table></div>
+  </div>
+
+  <div class="kartu">
+    <div class="alat" style="margin-bottom:10px">
+      <input id="cari" placeholder="Cari nama / NIM…">
+      <select id="fProdi"><option value="">Semua prodi</option></select>
+      <select id="fStatus">
+        <option value="">Semua status</option>
+        <option>Hadir penuh</option><option>Hadir sebagian</option><option>Tidak hadir</option>
+        <option value="cek">Lokasi perlu dicek</option>
+      </select>
+      <select id="fAngk"><option value="wajib">Angkatan wajib</option><option value="semua">Semua angkatan</option></select>
+    </div>
+    <div class="kecil" id="jmlBaris" style="margin-bottom:6px"></div>
+    <div class="wrap"><table id="tblMhs"></table></div>
+  </div>
+  <p class="kecil" id="terakhir"></p>
+</main>
+
+<script>
+/* ====== GANTI dengan URL Web App Apps Script Anda (sama dengan index.html) ====== */
+const API_URL = 'https://script.google.com/macros/s/AKfycby2elbG2Q0SJ8TbC5sAr-KKrfFXsP2Jw6PTWQJuCNn-LVvnx5-Qzkcza43bPd6eYSAKNw/exec';
+
+const $ = id => document.getElementById(id);
+let pwd = '', data = null, baris = [], timer = null;
+
+async function api(o){ const r = await fetch(API_URL,{method:'POST',body:JSON.stringify(o)}); return r.json(); }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function muat(){
+  try{
+    const r = await api({ aksi:'rekap', password:pwd });
+    if (!r.ok){ $('errLogin').textContent = r.pesan; tampilLogin(true); return; }
+    data = r; olah(); render();
+    $('terakhir').textContent = 'Data diperbarui: ' + r.info.waktu + ' WITA' + (r.info.modeUji ? ' · MODE UJI AKTIF' : '');
+  }catch(e){ $('terakhir').textContent = 'Gagal memuat data (cek koneksi).'; }
+}
+function tampilLogin(on){
+  $('login').classList.toggle('hide', !on); $('dash').classList.toggle('hide', on); $('aksiAtas').classList.toggle('hide', on);
+}
+
+function olah(){
+  const peta = {};
+  data.mahasiswa.forEach(m => peta[m.nim] = { ...m, datang:null, pulang:null });
+  data.absen.forEach(a => {
+    const k = a.jenis.toLowerCase();
+    if (!peta[a.nim]) peta[a.nim] = { nim:a.nim, nama:a.nama, prodi:a.prodi, kelas:a.kelas, angkatan:a.angkatan, datang:null, pulang:null };
+    if (!peta[a.nim][k]) peta[a.nim][k] = a;
+  });
+  baris = Object.values(peta).map(m => {
+    m.status = m.datang && m.pulang ? 'Hadir penuh' : (m.datang || m.pulang ? 'Hadir sebagian' : 'Tidak hadir');
+    m.perluCek = [m.datang, m.pulang].some(x => x && x.statusLokasi !== 'Valid');
+    return m;
+  }).sort((a,b) => (a.prodi+a.kelas+a.nama).localeCompare(b.prodi+b.kelas+b.nama));
+
+  const prodi = [...new Set(baris.map(b => b.prodi))].sort();
+  const sel = $('fProdi'), v = sel.value;
+  sel.innerHTML = '<option value="">Semua prodi</option>' + prodi.map(p => `<option>${esc(p)}</option>`).join('');
+  sel.value = v;
+}
+
+function render(){
+  const ak = data.angkatanWajib;
+  const wajib = baris.filter(b => b.angkatan === ak);
+  $('sAngk').textContent = ak;
+  $('sTotal').textContent = wajib.length;
+  $('sPenuh').textContent = wajib.filter(b => b.status==='Hadir penuh').length;
+  $('sSebagian').textContent = wajib.filter(b => b.status==='Hadir sebagian').length;
+  $('sTidak').textContent = wajib.filter(b => b.status==='Tidak hadir').length;
+  $('sCek').textContent = baris.filter(b => b.perluCek).length;
+
+  // rekap prodi-kelas
+  const g = {};
+  wajib.forEach(b => {
+    const k = b.prodi + ' — ' + b.kelas;
+    g[k] = g[k] || { t:0, p:0, s:0, x:0 };
+    g[k].t++; g[k][b.status==='Hadir penuh'?'p':b.status==='Hadir sebagian'?'s':'x']++;
+  });
+  $('tblProdi').innerHTML = '<tr><th>Prodi — Kelas</th><th>Jumlah</th><th>Hadir penuh</th><th>Sebagian</th><th>Tidak hadir</th><th>% Hadir penuh</th></tr>' +
+    Object.keys(g).sort().map(k => { const r = g[k];
+      return `<tr><td>${esc(k)}</td><td>${r.t}</td><td>${r.p}</td><td>${r.s}</td><td>${r.x}</td><td><b>${Math.round(r.p/r.t*100)}%</b></td></tr>`; }).join('');
+
+  // daftar
+  const q = $('cari').value.trim().toLowerCase(), fp = $('fProdi').value, fs = $('fStatus').value, fa = $('fAngk').value;
+  const list = filterBaris(q, fp, fs, fa);
+  $('jmlBaris').textContent = `Menampilkan ${list.length} mahasiswa`;
+  $('tblMhs').innerHTML = '<tr><th>#</th><th>Mahasiswa</th><th>Status</th><th>Datang</th><th>Pulang</th></tr>' +
+    list.map((b,i) => `<tr>
+      <td>${i+1}</td>
+      <td><b>${esc(b.nama)}</b><div class="kecil">${esc(b.nim)}<br>${esc(b.prodi)} · ${esc(b.kelas)} · ${esc(b.angkatan)}</div></td>
+      <td><span class="lbl ${b.status==='Hadir penuh'?'l-penuh':b.status==='Hadir sebagian'?'l-sebagian':'l-tidak'}">${b.status}</span>
+          ${b.perluCek?'<br><span class="lbl l-cek" style="margin-top:4px">Lokasi perlu dicek</span>':''}</td>
+      <td>${sel(b.datang)}</td><td>${sel(b.pulang)}</td></tr>`).join('');
+}
+function sel(a){
+  if (!a) return '<span class="kecil">—</span>';
+  const thumb = a.idFoto ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(a.idFoto)}&sz=w200` : '';
+  return `<div class="sel">
+    ${thumb?`<a href="${esc(a.foto)}" target="_blank" rel="noopener"><img class="foto" loading="lazy" src="${thumb}" alt="foto"></a>`:''}
+    <div class="kecil"><b style="color:#0f172a">${esc(a.waktu.split(' ')[1]||a.waktu)}</b><br>
+      ${esc(a.jarak)} m (±${esc(a.akurasi)} m)<br>
+      <span class="lbl ${a.statusLokasi==='Valid'?'l-penuh':'l-cek'}">${esc(a.statusLokasi)}</span><br>
+      <a href="https://www.google.com/maps?q=${esc(a.lat)},${esc(a.lng)}" target="_blank" rel="noopener">Lihat peta</a>
+      ${a.sumber && a.sumber!=='kamera' ? '<br>sumber: '+esc(a.sumber) : ''}</div></div>`;
+}
+function filterBaris(q, fp, fs, fa){
+  return baris.filter(b =>
+    (fa==='semua' || b.angkatan===data.angkatanWajib) &&
+    (!fp || b.prodi===fp) &&
+    (!fs || (fs==='cek' ? b.perluCek : b.status===fs)) &&
+    (!q || b.nama.toLowerCase().includes(q) || b.nim.toLowerCase().includes(q)));
+}
+
+function unduh(){
+  const list = filterBaris($('cari').value.trim().toLowerCase(), $('fProdi').value, $('fStatus').value, $('fAngk').value);
+  const kol = ['No','NIM','Nama','Program Studi','Kelas','Angkatan','Status','Jam Datang','Jarak Datang (m)','Lokasi Datang','Jam Pulang','Jarak Pulang (m)','Lokasi Pulang','Foto Datang','Foto Pulang'];
+  const q = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+  const rows = list.map((b,i) => [i+1, "'"+b.nim, b.nama, b.prodi, b.kelas, b.angkatan, b.status,
+    b.datang?.waktu, b.datang?.jarak, b.datang?.statusLokasi, b.pulang?.waktu, b.pulang?.jarak, b.pulang?.statusLokasi,
+    b.datang?.foto, b.pulang?.foto].map(q).join(';'));
+  const csv = '﻿' + [kol.map(q).join(';'), ...rows].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'Rekap_Absen_HKN_2026.csv'; a.click();
+}
+
+function aturAuto(){ clearInterval(timer); if ($('autoRef').checked) timer = setInterval(muat, 30000); }
+
+$('btnMasuk').onclick = async () => {
+  pwd = $('pwd').value; $('errLogin').textContent = '';
+  $('btnMasuk').textContent = 'Memeriksa…';
+  const r = await api({ aksi:'rekap', password:pwd }).catch(() => ({ ok:false, pesan:'Gagal terhubung ke server' }));
+  $('btnMasuk').textContent = 'Masuk';
+  if (!r.ok){ $('errLogin').textContent = r.pesan; return; }
+  data = r; tampilLogin(false); olah(); render(); aturAuto();
+  $('terakhir').textContent = 'Data diperbarui: ' + r.info.waktu + ' WITA';
+};
+$('pwd').addEventListener('keydown', e => { if (e.key==='Enter') $('btnMasuk').click(); });
+['cari','fProdi','fStatus','fAngk'].forEach(id => $(id).addEventListener('input', render));
+$('btnRefresh').onclick = muat;
+$('btnUnduh').onclick = unduh;
+$('autoRef').onchange = aturAuto;
+</script>
+</body>
+</html>

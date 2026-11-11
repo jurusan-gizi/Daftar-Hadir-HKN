@@ -1,0 +1,9 @@
+{
+  "name": "Absen Jalan Santai HKN 2026 - Jurusan Gizi",
+  "short_name": "Absen HKN",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0fdfa",
+  "theme_color": "#0f766e",
+  "icons": []
+}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.json">
+<title>Absen Jalan Santai HKN 2026 — Jurusan Gizi</title>
+<style>
+  :root{--hijau:#0f766e;--hijau2:#14b8a6;--merah:#dc2626;--kuning:#d97706;--abu:#64748b;--bg:#f0fdfa;--kartu:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#0f172a;min-height:100vh}
+  header{background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;padding:22px 18px 46px;text-align:center}
+  header small{opacity:.85;font-size:12px;letter-spacing:.5px;text-transform:uppercase}
+  header h1{font-size:21px;margin:6px 0 4px}
+  header p{font-size:13px;opacity:.9}
+  main{max-width:460px;margin:-30px auto 30px;padding:0 14px}
+  .kartu{background:var(--kartu);border-radius:16px;padding:18px;box-shadow:0 4px 18px rgba(15,118,110,.12);margin-bottom:14px}
+  label{font-size:13px;font-weight:600;color:var(--abu)}
+  input{width:100%;font-size:18px;padding:13px;border:2px solid #cbd5e1;border-radius:12px;margin:8px 0 12px;text-transform:uppercase;letter-spacing:1px}
+  input:focus{outline:none;border-color:var(--hijau2)}
+  button{font-family:inherit;cursor:pointer;border:0;border-radius:12px;font-weight:700}
+  .btn{width:100%;padding:14px;font-size:16px;background:var(--hijau);color:#fff}
+  .btn:disabled{background:#94a3b8;cursor:not-allowed}
+  .btn.sek{background:#e2e8f0;color:#0f172a}
+  .nama{font-size:19px;font-weight:800}
+  .meta{font-size:13px;color:var(--abu);margin-top:3px}
+  .ganti{background:none;color:var(--hijau);font-size:13px;padding:6px 0;text-decoration:underline}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .absen{padding:18px 10px;border-radius:16px;color:#fff;text-align:center;font-size:17px}
+  .absen .ik{font-size:30px;display:block;margin-bottom:4px}
+  .absen .ket{display:block;font-size:11px;font-weight:500;margin-top:6px;opacity:.95;line-height:1.35}
+  .datang{background:linear-gradient(135deg,#0d9488,#0f766e)}
+  .pulang{background:linear-gradient(135deg,#f59e0b,#d97706)}
+  .absen:disabled{background:#cbd5e1;color:#475569}
+  .absen.selesai{background:#dcfce7;color:#166534;border:2px solid #86efac}
+  .pesan{font-size:14px;padding:12px;border-radius:10px;margin-top:10px;line-height:1.45}
+  .pesan.err{background:#fee2e2;color:#991b1b}
+  .pesan.ok{background:#dcfce7;color:#166534}
+  .pesan.info{background:#e0f2fe;color:#075985}
+  .tips{font-size:13px;color:#334155;line-height:1.6;padding-left:18px}
+  /* layar kamera */
+  #kamera{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column}
+  #kamera.aktif{display:flex}
+  .kam-atas{color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+  .kam-atas b{font-size:16px}
+  .tutup{background:rgba(255,255,255,.15);color:#fff;padding:8px 12px;font-size:14px}
+  .layar{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  video,#hasil{max-width:100%;max-height:100%;object-fit:contain}
+  video{transform:scaleX(-1)}
+  #hasil{display:none}
+  .gps{position:absolute;top:10px;left:10px;right:10px;background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:8px 10px;border-radius:10px;text-align:center}
+  .gps.ok{background:rgba(22,101,52,.8)}
+  .kam-bawah{padding:16px;display:flex;gap:10px;justify-content:center;background:#000}
+  .jepret{width:74px;height:74px;border-radius:50%;background:#fff;border:6px solid #14b8a6}
+  .jepret:disabled{opacity:.35}
+  .kam-bawah .btn{max-width:200px}
+  .spin{display:inline-block;width:16px;height:16px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:p 0.8s linear infinite;vertical-align:middle;margin-right:6px}
+  @keyframes p{to{transform:rotate(360deg)}}
+  .sukses{text-align:center}
+  .sukses .cek{font-size:56px}
+  .sukses h2{margin:6px 0;color:var(--hijau)}
+  .tbl{width:100%;font-size:14px;margin-top:10px;border-collapse:collapse}
+  .tbl td{padding:6px 0;border-bottom:1px dashed #e2e8f0}
+  .tbl td:last-child{text-align:right;font-weight:600}
+  .uji{background:#fef3c7;color:#92400e;font-size:12px;text-align:center;padding:6px;border-radius:8px;margin-bottom:12px;font-weight:600}
+  footer{text-align:center;font-size:12px;color:var(--abu);padding-bottom:24px}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <small>Hari Kesehatan Nasional 2026</small>
+  <h1 id="judul">Absen Jalan Santai HKN</h1>
+  <p>Jurusan Gizi Poltekkes Kemenkes Makassar<br>📍 Depan Rujab Gubernur Sulsel, Jl. Jend. Sudirman</p>
+</header>
+
+<main>
+  <div id="ujiBanner" class="uji hide">⚠️ MODE UJI COBA — jam & tanggal belum dibatasi</div>
+
+  <!-- 1. Masukkan NIM -->
+  <section id="langkahNim" class="kartu">
+    <label for="nim">Masukkan NIM Anda</label>
+    <input id="nim" inputmode="text" autocomplete="off" placeholder="PO71…" maxlength="20">
+    <button class="btn" id="btnCek">Lanjut</button>
+    <div id="pesanNim"></div>
+  </section>
+
+  <!-- 2. Profil & tombol absen -->
+  <section id="langkahAbsen" class="hide">
+    <div class="kartu">
+      <div class="nama" id="pNama"></div>
+      <div class="meta" id="pMeta"></div>
+      <button class="ganti" id="btnGanti">Bukan saya? Ganti NIM</button>
+    </div>
+    <div class="grid">
+      <button class="absen datang" id="btnDatang"><span class="ik">🚶</span>DATANG<span class="ket" id="ketDatang"></span></button>
+      <button class="absen pulang" id="btnPulang"><span class="ik">🏁</span>PULANG<span class="ket" id="ketPulang"></span></button>
+    </div>
+    <div id="pesanAbsen"></div>
+    <div class="kartu" style="margin-top:14px">
+      <b style="font-size:14px">Petunjuk singkat</b>
+      <ul class="tips">
+        <li>Izinkan akses <b>Kamera</b> dan <b>Lokasi</b> saat diminta.</li>
+        <li>Nyalakan GPS/Lokasi HP, sebaiknya mode akurasi tinggi.</li>
+        <li>Selfie wajah jelas, tanpa masker &amp; kacamata hitam.</li>
+        <li>Absen DATANG saat tiba, PULANG setelah acara selesai.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3. Sukses -->
+  <section id="langkahSukses" class="kartu sukses hide">
+    <div class="cek">✅</div>
+    <h2 id="sJudul">Absen berhasil</h2>
+    <div class="meta" id="sNama"></div>
+    <table class="tbl">
+      <tr><td>Waktu (WITA)</td><td id="sWaktu"></td></tr>
+      <tr><td>Jarak dari titik acara</td><td id="sJarak"></td></tr>
+      <tr><td>Status lokasi</td><td id="sStatus"></td></tr>
+    </table>
+    <p class="meta" style="margin-top:12px">Silakan screenshot layar ini sebagai bukti.</p>
+    <button class="btn" style="margin-top:14px" id="btnKembali">Kembali</button>
+  </section>
+</main>
+
+<footer>© 2026 Jurusan Gizi Poltekkes Kemenkes Makassar</footer>
+
+<!-- Layar kamera -->
+<div id="kamera">
+  <div class="kam-atas"><b id="kJudul">Selfie DATANG</b><button class="tutup" id="btnTutup">✕ Batal</button></div>
+  <div class="layar">
+    <video id="video" autoplay playsinline muted></video>
+    <img id="hasil" alt="Hasil selfie">
+    <div class="gps" id="gpsInfo"><span class="spin"></span>Mencari lokasi GPS…</div>
+  </div>
+  <div class="kam-bawah" id="barJepret"><button class="jepret" id="btnJepret" disabled aria-label="Ambil foto"></button></div>
+  <div class="kam-bawah hide" id="barKirim">
+    <button class="btn sek" id="btnUlang">↺ Ulangi</button>
+    <button class="btn" id="btnKirim">Kirim Absen</button>
+  </div>
+</div>
+<input type="file" id="fileFallback" accept="image/*" capture="user" class="hide">
+<canvas id="kanvas" class="hide"></canvas>
+
+<script>
+/* ====== GANTI dengan URL Web App Apps Script Anda ====== */
+const API_URL = 'https://script.google.com/macros/s/AKfycby2elbG2Q0SJ8TbC5sAr-KKrfFXsP2Jw6PTWQJuCNn-LVvnx5-Qzkcza43bPd6eYSAKNw/exec';
+
+const $ = id => document.getElementById(id);
+let mhs = null, jenisAktif = '', stream = null, watchId = null, posTerbaik = null, fotoData = null, sumberFoto = 'kamera';
+
+function simpan(k, v){ try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k, v); }catch(e){} }
+function ambil(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+async function api(data){
+  const r = await fetch(API_URL, { method:'POST', body: JSON.stringify(data) });
+  return r.json();
+}
+function pesan(el, teks, jenis){ $(el).innerHTML = teks ? `<div class="pesan ${jenis||'info'}">${teks}</div>` : ''; }
+function tampil(id){ ['langkahNim','langkahAbsen','langkahSukses'].forEach(x => $(x).classList.toggle('hide', x!==id)); }
+
+/* ---------- Cek NIM ---------- */
+async function cekNim(nimInput){
+  const nim = (nimInput || $('nim').value).trim().toUpperCase().replace(/\s+/g,'');
+  if (!nim) return pesan('pesanNim','NIM belum diisi.','err');
+  $('btnCek').disabled = true; $('btnCek').innerHTML = '<span class="spin"></span>Memeriksa…';
+  pesan('pesanNim','');
+  try{
+    const r = await api({ aksi:'cek', nim });
+    if (!r.ok){ pesan('pesanNim', r.pesan, 'err'); simpan('nimHKN', null); tampil('langkahNim'); return; }
+    mhs = r.mhs; simpan('nimHKN', nim);
+    $('judul').textContent = 'Absen ' + (r.info.acara || 'Jalan Santai HKN');
+    $('ujiBanner').classList.toggle('hide', !r.info.modeUji);
+    $('pNama').textContent = mhs.nama;
+    $('pMeta').textContent = `${mhs.nim} · ${mhs.prodi} · ${mhs.kelas}`;
+    aturTombol('datang', r.datang, r.jendela.datang);
+    aturTombol('pulang', r.pulang, r.jendela.pulang);
+    pesan('pesanAbsen','');
+    tampil('langkahAbsen');
+  }catch(e){
+    pesan('pesanNim','Gagal terhubung ke server. Periksa sinyal internet lalu coba lagi.','err');
+  }finally{
+    $('btnCek').disabled = false; $('btnCek').textContent = 'Lanjut';
+  }
+}
+function aturTombol(jenis, sudah, jendela){
+  const b = $(jenis==='datang' ? 'btnDatang' : 'btnPulang');
+  const k = $(jenis==='datang' ? 'ketDatang' : 'ketPulang');
+  b.classList.remove('selesai');
+  if (sudah){ b.disabled = true; b.classList.add('selesai'); k.textContent = '✔ ' + sudah.waktu.split(' ')[1]; }
+  else if (!jendela.buka){ b.disabled = true; k.textContent = jendela.pesan; }
+  else { b.disabled = false; k.textContent = jendela.pesan; }
+}
+
+/* ---------- Kamera & GPS ---------- */
+async function bukaKamera(jenis){
+  jenisAktif = jenis; fotoData = null; posTerbaik = null; sumberFoto = 'kamera';
+  $('kJudul').textContent = 'Selfie ' + jenis.toUpperCase();
+  $('hasil').style.display = 'none'; $('video').style.display = '';
+  $('barJepret').classList.remove('hide'); $('barKirim').classList.add('hide');
+  $('btnJepret').disabled = true;
+  $('kamera').classList.add('aktif');
+  mulaiGPS();
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:{ideal:720}, height:{ideal:960} }, audio:false });
+    $('video').srcObject = stream;
+  }catch(e){
+    // Kamera langsung tidak didukung -> pakai kamera bawaan HP
+    tutupStream();
+    sumberFoto = 'kamera-bawaan';
+    $('video').style.display = 'none';
+    $('btnJepret').onclick = () => $('fileFallback').click();
+    cekSiapJepret();
+  }
+}
+function mulaiGPS(){
+  if (!navigator.geolocation){ $('gpsInfo').textContent = '❌ HP tidak mendukung GPS'; return; }
+  watchId = navigator.geolocation.watchPosition(p => {
+    if (!posTerbaik || p.coords.accuracy < posTerbaik.coords.accuracy) posTerbaik = p;
+    const a = Math.round(posTerbaik.coords.accuracy);
+    $('gpsInfo').className = 'gps ok';
+    $('gpsInfo').textContent = `📍 Lokasi terkunci (akurasi ±${a} m)`;
+    cekSiapJepret();
+  }, err => {
+    $('gpsInfo').className = 'gps';
+    $('gpsInfo').innerHTML = err.code === 1
+      ? '❌ Izin lokasi ditolak. Buka pengaturan browser → izinkan Lokasi, lalu muat ulang.'
+      : '<span class="spin"></span>Sinyal GPS lemah, tetap mencari… (pastikan GPS menyala)';
+  }, { enableHighAccuracy:true, maximumAge:0, timeout:20000 });
+}
+function cekSiapJepret(){ $('btnJepret').disabled = !posTerbaik; }
+function tutupStream(){ if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; } }
+function tutupKamera(){
+  tutupStream();
+  if (watchId != null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+  $('kamera').classList.remove('aktif');
+  $('btnJepret').onclick = jepret;
+}
+
+function gambarKeKanvas(sumber, w0, h0, cermin){
+  const W = 540, H = Math.round(W * h0 / w0);
+  const c = $('kanvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  if (cermin){ x.save(); x.translate(W,0); x.scale(-1,1); }
+  x.drawImage(sumber, 0, 0, W, H);
+  if (cermin) x.restore();
+  // cap teks
+  const p = posTerbaik.coords;
+  const baris = [
+    `${jenisAktif.toUpperCase()} · HKN 2026 · Jurusan Gizi`,
+    `${mhs.nama} (${mhs.nim})`,
+    new Date().toLocaleString('id-ID',{timeZone:'Asia/Makassar'}) + ' WITA',
+    `${p.latitude.toFixed(6)}, ${p.longitude.toFixed(6)} (±${Math.round(p.accuracy)} m)`
+  ];
+  const fs = 15, tinggi = baris.length * (fs + 6) + 12;
+  x.fillStyle = 'rgba(0,0,0,.55)'; x.fillRect(0, H - tinggi, W, tinggi);
+  x.fillStyle = '#fff'; x.font = `600 ${fs}px sans-serif`;
+  baris.forEach((t,i) => x.fillText(t, 10, H - tinggi + 22 + i*(fs+6)));
+  fotoData = c.toDataURL('image/jpeg', 0.65);
+  $('hasil').src = fotoData; $('hasil').style.display = ''; $('video').style.display = 'none';
+  $('barJepret').classList.add('hide'); $('barKirim').classList.remove('hide');
+}
+function jepret(){
+  const v = $('video');
+  if (!v.videoWidth) return;
+  gambarKeKanvas(v, v.videoWidth, v.videoHeight, true);
+}
+$('fileFallback').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  // Tolak foto lama (bukan diambil saat ini)
+  if (Date.now() - f.lastModified > 3*60*1000){
+    alert('Foto harus diambil langsung saat ini, bukan dari galeri.'); e.target.value=''; return;
+  }
+  const img = new Image();
+  img.onload = () => { gambarKeKanvas(img, img.naturalWidth, img.naturalHeight, false); URL.revokeObjectURL(img.src); };
+  img.src = URL.createObjectURL(f); e.target.value = '';
+});
+
+async function kirim(){
+  if (!fotoData || !posTerbaik) return;
+  const b = $('btnKirim'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Mengirim…';
+  const p = posTerbaik.coords;
+  try{
+    const r = await api({ aksi:'absen', nim:mhs.nim, jenis:jenisAktif, lat:p.latitude, lng:p.longitude,
+      acc:p.accuracy, foto:fotoData, sumber:sumberFoto, ua:navigator.userAgent });
+    tutupKamera();
+    if (!r.ok){ await cekNim(mhs.nim); pesan('pesanAbsen', r.pesan, 'err'); return; }
+    $('sJudul').textContent = `Absen ${jenisAktif.toUpperCase()} berhasil`;
+    $('sNama').textContent = `${r.nama} · ${mhs.nim}`;
+    $('sWaktu').textContent = r.waktu;
+    $('sJarak').textContent = r.jarak + ' m';
+    $('sStatus').innerHTML = r.statusLokasi === 'Valid' ? '✅ Valid' : '⚠️ Perlu dicek panitia';
+    tampil('langkahSukses');
+  }catch(e){
+    alert('Gagal mengirim. Sinyal mungkin lemah — tekan "Kirim Absen" lagi.');
+  }finally{
+    b.disabled = false; b.textContent = 'Kirim Absen';
+  }
+}
+
+/* ---------- Event ---------- */
+$('btnCek').onclick = () => cekNim();
+$('nim').addEventListener('keydown', e => { if (e.key === 'Enter') cekNim(); });
+$('btnGanti').onclick = () => { simpan('nimHKN', null); mhs = null; $('nim').value=''; tampil('langkahNim'); };
+$('btnDatang').onclick = () => bukaKamera('datang');
+$('btnPulang').onclick = () => bukaKamera('pulang');
+$('btnJepret').onclick = jepret;
+$('btnUlang').onclick = () => {
+  fotoData = null; $('hasil').style.display='none';
+  $('barJepret').classList.remove('hide'); $('barKirim').classList.add('hide');
+  if (stream) $('video').style.display = '';
+};
+$('btnKirim').onclick = kirim;
+$('btnTutup').onclick = tutupKamera;
+$('btnKembali').onclick = () => cekNim(mhs.nim);
+
+const nimTersimpan = ambil('nimHKN');
+if (nimTersimpan){ $('nim').value = nimTersimpan; cekNim(nimTersimpan); }
+</script>
+</body>
+</html>
